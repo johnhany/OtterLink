@@ -1,0 +1,12 @@
+[Unit]
+Description=BJX daily crawl + briefing + site render
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bjx
+Group=bjx
+Environment=BJX_BASE=/opt/bjx/data
+Environment=BJX_SITE=/opt/bjx/site
+ExecStart=/opt/bjx/run_daily.sh

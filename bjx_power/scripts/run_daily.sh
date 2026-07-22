@@ -1,0 +1,28 @@
+#!/bin/bash
+# 北极星电力网每日流程: 抓取 -> 简报 -> 静态站点
+# 由 systemd bjx-daily.service 调用(见 deploy/), 也可手动执行。
+set -uo pipefail
+cd "$(dirname "$0")"
+
+export BJX_BASE="${BJX_BASE:-/opt/bjx/data}"
+export BJX_SITE="${BJX_SITE:-/opt/bjx/site}"
+
+PY=./.venv/bin/python
+[ -x "$PY" ] || PY=python3
+
+echo "[run_daily] $(date '+%F %T') start (BJX_BASE=$BJX_BASE)"
+
+"$PY" crawler.py run          # 无 DISPLAY 时脚本内部自动 xvfb-run 重 exec
+rc_crawl=$?
+echo "[run_daily] crawler exit=$rc_crawl"
+
+# 抓取失败也要把既有报告发布出去, 故不因上一步失败而中止
+"$PY" site.py
+rc_site=$?
+echo "[run_daily] site exit=$rc_site"
+
+# 可选备份(状态快照/全文包 -> $BJX_OUT): 取消下行注释
+# "$PY" pack.py export
+
+echo "[run_daily] $(date '+%F %T') done"
+[ "$rc_crawl" -eq 0 ] && [ "$rc_site" -eq 0 ]

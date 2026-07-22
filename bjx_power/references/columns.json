@@ -1,0 +1,24 @@
+{
+  "columns": [
+    {"id": "yw",       "name": "要闻",     "type": "main_list", "url": "https://news.bjx.com.cn/yw/"},
+    {"id": "zc",       "name": "政策",     "type": "main_list", "url": "https://news.bjx.com.cn/zc/"},
+    {"id": "sc",       "name": "市场",     "type": "main_list", "url": "https://news.bjx.com.cn/sc/"},
+    {"id": "sj",       "name": "数据",     "type": "main_list", "url": "https://news.bjx.com.cn/sj/"},
+    {"id": "xm",       "name": "项目",     "type": "main_list", "url": "https://news.bjx.com.cn/xm/"},
+    {"id": "mq",       "name": "企业",     "type": "main_list", "url": "https://news.bjx.com.cn/mq/"},
+    {"id": "pl",       "name": "评论",     "type": "main_list", "url": "https://news.bjx.com.cn/pl/"},
+    {"id": "gj",       "name": "国际",     "type": "main_list", "url": "https://news.bjx.com.cn/gj/"},
+    {"id": "dj",       "name": "独家",     "type": "main_list", "url": "https://news.bjx.com.cn/dj/"},
+    {"id": "js",       "name": "技术",     "type": "main_list", "url": "https://news.bjx.com.cn/js/"},
+    {"id": "huodian",  "name": "火电",     "type": "portal",    "url": "https://huodian.bjx.com.cn/",  "host": "huodian.bjx.com.cn"},
+    {"id": "fd",       "name": "风电",     "type": "portal",    "url": "https://fd.bjx.com.cn/",       "host": "fd.bjx.com.cn"},
+    {"id": "guangfu",  "name": "光伏",     "type": "portal",    "url": "https://guangfu.bjx.com.cn/",  "host": "guangfu.bjx.com.cn"},
+    {"id": "chuneng",  "name": "储能",     "type": "portal",    "url": "https://chuneng.bjx.com.cn/",  "host": "chuneng.bjx.com.cn"},
+    {"id": "shuidian", "name": "水电",     "type": "portal",    "url": "https://shuidian.bjx.com.cn/", "host": "shuidian.bjx.com.cn"},
+    {"id": "hedian",   "name": "核电",     "type": "portal",    "url": "https://hedian.bjx.com.cn/",   "host": "hedian.bjx.com.cn"},
+    {"id": "shupeidian","name": "输配电",  "type": "portal",    "url": "https://shupeidian.bjx.com.cn/","host": "shupeidian.bjx.com.cn"},
+    {"id": "shoudian", "name": "电力市场", "type": "portal",    "url": "https://shoudian.bjx.com.cn/", "host": "shoudian.bjx.com.cn"},
+    {"id": "qn",       "name": "氢能",     "type": "portal",    "url": "https://qn.bjx.com.cn/",       "host": "qn.bjx.com.cn"},
+    {"id": "huanbao",  "name": "环保",     "type": "portal",    "url": "https://huanbao.bjx.com.cn/",  "host": "huanbao.bjx.com.cn"}
+  ]
+}
