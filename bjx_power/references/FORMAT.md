@@ -24,6 +24,7 @@
 ├── articles/YYYY-MM/     # 文章Markdown全文（文件名=文章ID.md）
 │   └── images/           # 正文图片（文件名=文章ID_序号.扩展名）
 ├── briefing/YYYY-MM-DD.md  # 每日简报
+├── summaries/YYYY-MM-DD.json  # 首页日报摘要+推荐链接缓存（site.py 生成，需配置 BJX_LLM_*）
 ├── metrics/metrics-YYYY-MM.jsonl  # 结构化数值指标
 ├── logs/YYYY-MM-DD.log   # 运行日志
 └── state/

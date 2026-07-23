@@ -7,8 +7,10 @@ cd "$(dirname "$0")"
 export BJX_BASE="${BJX_BASE:-$HOME/bjx/data}"
 export BJX_SITE="${BJX_SITE:-$HOME/bjx/site}"
 
-# venv 布局: Linux/macOS 为 bin/, Windows 为 Scripts/
+# venv 布局: 脚本同级 .venv(旧扁平布局)或上级目录 .venv(仓库布局 scripts/ 的上一级);
+# Linux/macOS 为 bin/, Windows 为 Scripts/
 PY=./.venv/bin/python
+[ -x "$PY" ] || PY=../.venv/bin/python
 [ -x "$PY" ] || PY=./.venv/Scripts/python
 [ -x "$PY" ] || PY=python3
 

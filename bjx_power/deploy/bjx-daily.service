@@ -4,10 +4,11 @@
 #   systemctl --user daemon-reload
 #   systemctl --user enable --now bjx-daily.timer
 #   sudo loginctl enable-linger $USER    # 登出后也允许定时器触发(仅这步需 sudo)
-# %h 自动解析为当前用户家目录, 路径默认值由 run_daily.sh 按 $HOME/bjx/* 解析
+# %h 自动解析为当前用户家目录; 代码经 GitHub 克隆到 ~/bjx/repo/,
+# 数据/站点路径默认值由 run_daily.sh 按 $HOME/bjx/* 解析
 [Unit]
 Description=BJX daily crawl + briefing + site render
 
 [Service]
 Type=oneshot
-ExecStart=%h/bjx/run_daily.sh
+ExecStart=%h/bjx/repo/bjx_power/scripts/run_daily.sh
