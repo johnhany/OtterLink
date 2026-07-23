@@ -4,7 +4,7 @@ Description=BJX daily crawl timer (weekday mornings, Asia/Shanghai)
 
 [Timer]
 # 服务器时区已设为 Asia/Shanghai(timedatectl), 此为北京时间周一至周五 08:30
-OnCalendar=Mon..Fri 08:30:00
+OnCalendar=Mon..Fri 07:30:00
 Persistent=true
 
 [Install]
