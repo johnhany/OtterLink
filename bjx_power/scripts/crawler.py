@@ -7,13 +7,13 @@
   python3 crawler.py mark --ids ID...    # 将手动补抓的文章ID标记为已抓
 配套脚本:
   metrics.py run                         # 当日新增图片OCR预筛+索引拼图(图片表格解析第一步)
-  pack.py export                         # 导出状态快照/全文包/更新运行时包到 $BJX_OUT（默认 /opt/bjx/backup）
+  pack.py export                         # 导出状态快照/全文包/更新运行时包到 $BJX_OUT（默认 ~/bjx/backup）
   bootstrap.sh                           # 每日自举: 恢复运行时→校验→运行(见 REBUILD.md)
 任务幂等: 已抓取的文章ID存于 state/seen.json, 重跑自动跳过。
 """
 import os, sys, json, re, time, random, hashlib, argparse, datetime, subprocess
 
-BASE = os.environ.get("BJX_BASE", "/opt/bjx/data")
+BASE = os.environ.get("BJX_BASE") or os.path.expanduser(os.path.join("~", "bjx", "data"))
 CONF = os.path.join(BASE, "config", "columns.json")
 STATE_DIR = os.path.join(BASE, "state")
 SEEN_FILE = os.path.join(STATE_DIR, "seen.json")

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-每日收尾导出: 状态快照 + 当日全文包 + 运行时包(内容变化时) -> $BJX_OUT（默认 /opt/bjx/backup）
+每日收尾导出: 状态快照 + 当日全文包 + 运行时包(内容变化时) -> $BJX_OUT（默认 ~/bjx/backup）
 用法:
   python3 pack.py export [--date YYYY-MM-DD]
   python3 pack.py runtime          # 仅重建运行时包
 """
-import os, sys, json, zipfile, hashlib, argparse, datetime, shutil, subprocess
+import os, sys, json, zipfile, hashlib, argparse, datetime, subprocess
 
-BASE = os.environ.get("BJX_BASE", "/opt/bjx/data")
-OUT = os.environ.get("BJX_OUT", "/opt/bjx/backup")
+BASE = os.environ.get("BJX_BASE") or os.path.expanduser(os.path.join("~", "bjx", "data"))
+OUT = os.environ.get("BJX_OUT") or os.path.expanduser(os.path.join("~", "bjx", "backup"))
 STATE_DIR = os.path.join(BASE, "state")
 SEEN_FILE = os.path.join(STATE_DIR, "seen.json")
 PENDING_FILE = os.path.join(STATE_DIR, "pending_manual.json")
@@ -73,16 +73,17 @@ def export_fulltext(date):
             if f.rsplit("_", 1)[0] in day_ids:
                 img_files.append(f)
     name_md = "北极星电力网文章全文-%s.zip" % date
-    zf = os.path.join("/tmp", name_md)
+    dst_md = os.path.join(OUT, name_md)
+    zf = dst_md + ".tmp"
     with zipfile.ZipFile(zf, "w", zipfile.ZIP_DEFLATED) as z:
         for f in md_files:
             z.write(os.path.join(src, f), arcname=f)
-    shutil.copy(zf, os.path.join(OUT, name_md))
-    print("全文包(纯文本): %s (%d篇, %.1fKB)" % (name_md, len(md_files), os.path.getsize(zf) / 1024))
+    os.replace(zf, dst_md)
+    print("全文包(纯文本): %s (%d篇, %.1fKB)" % (name_md, len(md_files), os.path.getsize(dst_md) / 1024))
     # 含图包(分卷)
     if img_files:
         name_img = "北极星电力网文章全文含图-%s.zip" % date
-        zf2 = os.path.join("/tmp", name_img)
+        zf2 = os.path.join(OUT, name_img + ".tmp")
         with zipfile.ZipFile(zf2, "w", zipfile.ZIP_DEFLATED) as z:
             for f in md_files:
                 z.write(os.path.join(src, f), arcname=f)
@@ -90,7 +91,7 @@ def export_fulltext(date):
                 z.write(os.path.join(img_dir, f), arcname="images/" + f)
         sz = os.path.getsize(zf2)
         if sz <= MAX_OUT:
-            shutil.copy(zf2, os.path.join(OUT, name_img))
+            os.replace(zf2, os.path.join(OUT, name_img))
             print("全文包(含图): %s (%d图, %.1fMB)" % (name_img, len(img_files), sz / 1048576))
         else:
             n = 0
@@ -101,6 +102,7 @@ def export_fulltext(date):
                     part = os.path.join(OUT, "%s.part%02d" % (name_img, n))
                     with open(part, "wb") as pf: pf.write(chunk)
                     n += 1
+            os.remove(zf2)
             print("全文包(含图): %s 分%d卷 (%d图, %.1fMB)" % (name_img, n, len(img_files), sz / 1048576))
     # 清理旧日期包, 避免堆积
     for f in os.listdir(OUT):
@@ -125,7 +127,7 @@ def export_runtime(force=False):
         if open(sig).read().strip() == cur:
             print("运行时包无变化, 跳过")
             return
-    zf = "/tmp/bjx_daily_runtime.zip"
+    zf = RUNTIME + ".tmp"
     with zipfile.ZipFile(zf, "w", zipfile.ZIP_DEFLATED) as z:
         for rel in RUNTIME_FILES:
             p = os.path.join(BASE, rel)
@@ -139,7 +141,7 @@ def export_runtime(force=False):
             p = os.path.join(BASE, rel)
             if os.path.exists(p):
                 z.write(p, arcname=rel)
-    shutil.copy(zf, RUNTIME)
+    os.replace(zf, RUNTIME)
     open(sig, "w").write(cur)
     print("运行时包: bjx_daily_runtime.zip (%.1fKB)" % (os.path.getsize(RUNTIME) / 1024))
 

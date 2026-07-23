@@ -1,3 +1,4 @@
+# 用户级 systemd timer —— 与 bjx-daily.service 一起放入 ~/.config/systemd/user/
 [Unit]
 Description=BJX daily crawl timer (weekday mornings, Asia/Shanghai)
 

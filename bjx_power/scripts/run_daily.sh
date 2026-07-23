@@ -1,13 +1,15 @@
 #!/bin/bash
 # 北极星电力网每日流程: 抓取 -> 简报 -> 静态站点
-# 由 systemd bjx-daily.service 调用(见 deploy/), 也可手动执行。
+# 由用户级 systemd 定时器调用(systemctl --user, 见 deploy/), 也可手动执行。
 set -uo pipefail
 cd "$(dirname "$0")"
 
-export BJX_BASE="${BJX_BASE:-/opt/bjx/data}"
-export BJX_SITE="${BJX_SITE:-/opt/bjx/site}"
+export BJX_BASE="${BJX_BASE:-$HOME/bjx/data}"
+export BJX_SITE="${BJX_SITE:-$HOME/bjx/site}"
 
+# venv 布局: Linux/macOS 为 bin/, Windows 为 Scripts/
 PY=./.venv/bin/python
+[ -x "$PY" ] || PY=./.venv/Scripts/python
 [ -x "$PY" ] || PY=python3
 
 echo "[run_daily] $(date '+%F %T') start (BJX_BASE=$BJX_BASE)"

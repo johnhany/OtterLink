@@ -6,7 +6,7 @@
 # 设计目标: work目录不存在、或全新沙箱时, 一条命令恢复到可抓取状态。
 set -u
 BASE="${BJX_BASE:-/mnt/agents/work/bjx_daily}"
-export BJX_BASE="$BASE"   # crawler.py 等脚本的路径基准(默认值改为 /opt/bjx/data 后, 此处保持沙箱流程兼容)
+export BJX_BASE="$BASE"   # crawler.py 等脚本的路径基准(默认值改为 ~/bjx/data 后, 此处保持沙箱流程兼容)
 OUT=/mnt/agents/output
 PKG=$OUT/bjx_daily_runtime.zip
 SNAP=$OUT/bjx_state_latest.json
@@ -81,6 +81,5 @@ PY
 
 echo "[bootstrap] ready"
 if [ "${1:-}" = "run" ]; then
-  cp "$BASE/crawler.py" /tmp/crawler.py
-  python3 /tmp/crawler.py run
+  python3 "$BASE/crawler.py" run
 fi

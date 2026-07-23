@@ -7,11 +7,11 @@
   python3 metrics.py run [--date YYYY-MM-DD] [--all]
 输出:
   state/img_analysis-<date>.json    每张图的分类与OCR摘要
-  /tmp/bjx_sheets/sheet_XX.jpg      索引拼图(文件名标注在图上)
+  metrics/sheets/sheet_XX.jpg       索引拼图(文件名标注在图上, 位于 $BJX_BASE 下)
 """
 import os, sys, json, re, argparse, datetime, subprocess, math, tempfile
 
-BASE = os.environ.get("BJX_BASE", "/opt/bjx/data")
+BASE = os.environ.get("BJX_BASE") or os.path.expanduser(os.path.join("~", "bjx", "data"))
 ART_DIR = os.path.join(BASE, "articles")
 STATE_DIR = os.path.join(BASE, "state")
 SEEN_FILE = os.path.join(STATE_DIR, "seen.json")
@@ -123,10 +123,11 @@ def cmd_run(date, use_all=False):
     os.makedirs(STATE_DIR, exist_ok=True)
     json.dump(results, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     cand = [r for r in results if r["class"] in ("candidate_table", "candidate_chart", "review")]
-    sheets = make_sheets(cand, "/tmp/bjx_sheets")
+    sheet_dir = os.path.join(BASE, "metrics", "sheets")
+    sheets = make_sheets(cand, sheet_dir)
     from collections import Counter
     print("分类统计:", dict(Counter(r["class"] for r in results)))
-    print("候选 %d 张 -> 拼图 %d 张于 /tmp/bjx_sheets/" % (len(cand), len(sheets)))
+    print("候选 %d 张 -> 拼图 %d 张于 %s" % (len(cand), len(sheets), sheet_dir))
     print("分析结果: %s" % out)
 
 def main():

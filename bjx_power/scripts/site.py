@@ -5,14 +5,14 @@
 用法:
   python3 site.py
 环境变量:
-  BJX_BASE  数据目录(默认 /opt/bjx/data), 读取 briefing/ 与 logs/
-  BJX_SITE  站点输出目录(默认 /opt/bjx/site), 即 Nginx root
+  BJX_BASE  数据目录(默认 ~/bjx/data), 读取 briefing/ 与 logs/
+  BJX_SITE  站点输出目录(默认 ~/bjx/site), 即 Nginx root
 幂等: 每次全量重渲染, 秒级完成。部署与定时调度见 design.md。
 """
 import os, sys, re, glob, datetime
 
-BASE = os.environ.get("BJX_BASE", "/opt/bjx/data")
-SITE = os.environ.get("BJX_SITE", "/opt/bjx/site")
+BASE = os.environ.get("BJX_BASE") or os.path.expanduser(os.path.join("~", "bjx", "data"))
+SITE = os.environ.get("BJX_SITE") or os.path.expanduser(os.path.join("~", "bjx", "site"))
 BRIEF_DIR = os.path.join(BASE, "briefing")
 LOG_DIR = os.path.join(BASE, "logs")
 

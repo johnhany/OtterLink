@@ -1,12 +1,13 @@
+# 用户级 systemd service —— 安装到 ~/.config/systemd/user/, 无需 root:
+#   mkdir -p ~/.config/systemd/user
+#   cp bjx-daily.service bjx-daily.timer ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now bjx-daily.timer
+#   sudo loginctl enable-linger $USER    # 登出后也允许定时器触发(仅这步需 sudo)
+# %h 自动解析为当前用户家目录, 路径默认值由 run_daily.sh 按 $HOME/bjx/* 解析
 [Unit]
 Description=BJX daily crawl + briefing + site render
-After=network-online.target
-Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=bjx
-Group=bjx
-Environment=BJX_BASE=/opt/bjx/data
-Environment=BJX_SITE=/opt/bjx/site
-ExecStart=/opt/bjx/run_daily.sh
+ExecStart=%h/bjx/run_daily.sh
