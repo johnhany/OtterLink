@@ -1,12 +1,14 @@
-# OtterLink
+# bjx_power
 
 北极星电力网（bjx.com.cn）每日资讯自动抓取与展示系统：工作日早上定时抓取 20 个栏目的 24 小时增量文章，生成每日资讯报告（Markdown 简报），并以静态网站形式对外展示。
+
+- 所属仓库：[OtterLink](../README.md)（个人工具项目合集，本项目为其子项目之一）
 
 - 生产环境：腾讯云香港 CVM（Ubuntu 24.04）+ Nginx + systemd 用户级 timer
 - 线上地址：<https://bjx.geekbit.org>
 - 路径原则：**所有文件读写都在用户目录（`~/bjx/`）下进行**，不依赖 `/opt`、`/tmp`，避免文件权限问题
 - 本地开发同时支持 Windows 与 macOS
-- 完整技术方案（架构、改动清单、风险与运维）见 [bjx_power/design.md](bjx_power/design.md)
+- 完整技术方案（架构、改动清单、风险与运维）见 [design.md](design.md)
 
 ## 项目说明
 
@@ -114,7 +116,7 @@ export BJX_NO_XVFB=1        # Windows 与 macOS 都没有 xvfb；本地有显示
 
 ## 腾讯云部署（生产）
 
-> 以下为部署要点，完整说明见 [design.md](bjx_power/design.md) 第 4 节。所有文件都在登录用户家目录（`~/bjx/`），仅标注 sudo 的步骤需要 root。
+> 以下为部署要点，完整说明见 [design.md](design.md) 第 4 节。所有文件都在登录用户家目录（`~/bjx/`），仅标注 sudo 的步骤需要 root。
 
 ### 前置条件
 
@@ -221,6 +223,6 @@ tail ~/bjx/data/logs/$(date +%F).log           # 应见 "=== 完成 ==="
 
 | 文档 | 内容 |
 | --- | --- |
-| [bjx_power/design.md](bjx_power/design.md) | 部署技术方案：架构、工作流程、代码改动清单、风险与运维 |
-| [bjx_power/references/FORMAT.md](bjx_power/references/FORMAT.md) | 数据格式权威定义（文章/简报/状态/栏目） |
-| [bjx_power/references/REBUILD.md](bjx_power/references/REBUILD.md) | 全灭重建手册（含 2026-07 实测 WAF 绕过参数） |
+| [design.md](design.md) | 部署技术方案：架构、工作流程、代码改动清单、风险与运维 |
+| [references/FORMAT.md](references/FORMAT.md) | 数据格式权威定义（文章/简报/状态/栏目） |
+| [references/REBUILD.md](references/REBUILD.md) | 全灭重建手册（含 2026-07 实测 WAF 绕过参数） |
