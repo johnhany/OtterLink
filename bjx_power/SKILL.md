@@ -35,7 +35,8 @@ bash /mnt/agents/work/bjx_daily/bootstrap.sh
 
 | 技能包内 | 恢复后位置 | 说明 |
 | --- | --- | --- |
-| scripts/crawler.py | crawler.py | 抓取+简报主程序 |
+| scripts/crawler.py | crawler.py | 抓取主程序（简报构造复用 briefing.py） |
+| scripts/briefing.py | briefing.py | 每日简报构造（库 + CLI，纯本地不联网） |
 | scripts/metrics.py | metrics.py | 图片OCR预筛+索引拼图 |
 | scripts/pack.py | pack.py | 每日收尾导出 |
 | scripts/site.py | site.py | 静态站点生成（简报→HTML，服务器部署用，见 design.md） |

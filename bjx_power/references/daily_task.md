@@ -49,17 +49,7 @@ python3 /mnt/agents/work/bjx_daily/metrics.py run
 若当日有新的表格转录成果，把精选数值写入 `state/briefing_manual.md`（Markdown 表格优先，不出现任何注释标记），然后重建简报：
 
 ```bash
-python3 - <<'PY'
-import os, json, importlib.util
-os.environ["BJX_NO_XVFB"]="1"
-spec=importlib.util.spec_from_file_location("c","/mnt/agents/work/bjx_daily/crawler.py")
-c=importlib.util.module_from_spec(spec); spec.loader.exec_module(c)
-B="/mnt/agents/work/bjx_daily"
-cols=json.load(open(B+"/config/columns.json"))["columns"]
-seen=json.load(open(B+"/state/seen.json"))
-pend=c.load_json(B+"/state/pending_manual.json",{})
-print(c.build_briefing(c.today_str(),cols,seen,pend))
-PY
+python3 briefing.py            # 重建当天简报; 指定日期: python3 briefing.py --date YYYY-MM-DD
 ```
 
 ## Step 5 呈现 + 导出收尾

@@ -14,7 +14,7 @@ STATE_DIR = os.path.join(BASE, "state")
 SEEN_FILE = os.path.join(STATE_DIR, "seen.json")
 PENDING_FILE = os.path.join(STATE_DIR, "pending_manual.json")
 RUNTIME = os.path.join(OUT, "bjx_daily_runtime.zip")
-RUNTIME_FILES = ["crawler.py", "metrics.py", "pack.py", "site.py", "run_daily.sh",
+RUNTIME_FILES = ["crawler.py", "briefing.py", "metrics.py", "pack.py", "site.py", "run_daily.sh",
                  "bootstrap.sh", "FORMAT.md", "REBUILD.md", "daily_task.md", "config/columns.json"]
 MAX_OUT = 95 * 1024 * 1024  # 输出目录单文件上限(实测约100MB), 留余量
 

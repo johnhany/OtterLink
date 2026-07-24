@@ -6,12 +6,16 @@
   python3 crawler.py run                 # 抓取20个栏目过去24小时增量, 生成当日Markdown简报
   python3 crawler.py mark --ids ID...    # 将手动补抓的文章ID标记为已抓
 配套脚本:
+  briefing.py [--date D|--all]           # 仅由爬取结果重建每日简报(纯本地, 不联网)
   metrics.py run                         # 当日新增图片OCR预筛+索引拼图(图片表格解析第一步)
   pack.py export                         # 导出状态快照/全文包/更新运行时包到 $BJX_OUT（默认 ~/bjx/backup）
   bootstrap.sh                           # 每日自举: 恢复运行时→校验→运行(见 REBUILD.md)
 任务幂等: 已抓取的文章ID存于 state/seen.json, 重跑自动跳过。
 """
 import os, sys, json, re, time, random, hashlib, argparse, datetime, subprocess
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from briefing import build_briefing   # 简报构造的唯一来源, crawler 与 briefing.py CLI 共用
 
 BASE = os.environ.get("BJX_BASE") or os.path.expanduser(os.path.join("~", "bjx", "data"))
 CONF = os.path.join(BASE, "config", "columns.json")
@@ -357,96 +361,45 @@ def collect_items(columns, date8_set, dateiso_set):
 
 NUM_PAT = re.compile(
     r"(\d[\d,\.]*\s*(?:万千瓦|兆瓦|MW|GW|kW|千瓦|亿千瓦时|万千瓦时|千瓦时|亿元|万元|元/千瓦时|元/吨|万吨|吨|亿元/年|%|个百分点))")
+HARD_PUNCT = "。！？；\n"
+SOFT_PUNCT = "，、："
+
+def _expand_to_punct(text, start, end, puncts):
+    """将 [start,end) 区间向两端扩展到最近的断句标点边界。"""
+    l = 0
+    for i in range(start - 1, -1, -1):
+        if text[i] in puncts:
+            l = i + 1
+            break
+    r = len(text)
+    for i in range(end, len(text)):
+        if text[i] in puncts:
+            r = i
+            break
+    return text[l:r]
+
+def snippet_around(text, start, end, limit=60):
+    """取含数值的完整语句作简报片段: 先按句扩展, 超长收缩到分句, 仍超长硬截断加省略号。"""
+    s = _expand_to_punct(text, start, end, HARD_PUNCT)
+    if len(s) > limit:
+        s = _expand_to_punct(text, start, end, HARD_PUNCT + SOFT_PUNCT)
+    s = s.strip(" \t\n，、：；。！？")
+    if len(s) > limit:
+        s = s[:limit].rstrip("，、：； ") + "…"
+    return _clean(s)
 
 def extract_numbers(title, lead):
     out = []
     for seg in (title, lead):
         for m in NUM_PAT.finditer(seg or ""):
-            s = _clean(seg[max(0, m.start() - 25):m.end() + 15])
+            s = snippet_around(seg, m.start(), m.end())
+            # 片段本身是标题(的子串)时没有增量信息(简报行尾已附标题链接), 跳过;
+            # 但导语中"包含标题且更长"的句子有增量信息, 保留
+            if s and title and s in title:
+                continue
             if s and s not in out:
                 out.append(s)
     return out[:3]
-
-def build_briefing(day, columns, seen, pending):
-    """生成/重建当日简报; 保留人工追加区块。"""
-    path = os.path.join(BRIEF_DIR, day + ".md")
-    # 人工整理的"市场数值"内容存放于 state/briefing_manual.md, 注入时不再留任何标记
-    manual = ""
-    manual_path = os.path.join(STATE_DIR, "briefing_manual.md")
-    if os.path.exists(manual_path):
-        manual = open(manual_path, encoding="utf-8").read().strip("\n")
-    dateiso_set = {day, (datetime.date.fromisoformat(day) - datetime.timedelta(days=1)).isoformat()}
-    arts = [v for v in seen.values() if v.get("date", "")[:10] in dateiso_set and v.get("status") in ("ok", "manual")]
-    arts.sort(key=lambda v: (v.get("date", ""), v.get("id", "")), reverse=True)
-    col_order = [c["id"] for c in columns]
-    col_name = {c["id"]: c["name"] for c in columns}
-    by_col = {}
-    for v in arts:
-        by_col.setdefault(v.get("column_id", "?"), []).append(v)
-
-    L = []
-    L.append("# 北极星电力网每日简报（%s）" % day)
-    L.append("")
-    L.append("> 生成时间：%s（北京时间） ｜ 覆盖栏目：%d ｜ 收录文章：%d 篇 ｜ 待人工补抓：%d 篇"
-             % (bj_now().strftime("%Y-%m-%d %H:%M"), len(columns), len(arts), len(pending)))
-    L.append("")
-    L.append("## 今日概览")
-    L.append("")
-    L.append("| 栏目 | 篇数 |")
-    L.append("| --- | --- |")
-    for cid in col_order:
-        if cid in by_col:
-            L.append("| %s | %d |" % (col_name[cid], len(by_col[cid])))
-    L.append("")
-    # 要闻精选
-    L.append("## 要闻精选")
-    L.append("")
-    picks = [v for v in arts if v.get("column_id") in ("yw", "dj", "zc")]
-    if len(picks) < 10:
-        rest = [v for v in arts if v not in picks]
-        picks += rest[:10 - len(picks)]
-    picks = picks[:10]
-    for v in picks:
-        L.append("- **[%s](%s)**（%s ｜ %s）" % (v["title"], v["url"], col_name.get(v.get("column_id"), v.get("column_name", "")), v.get("date", "")[:16]))
-        if v.get("lead"):
-            L.append("  > %s" % v["lead"][:150])
-    L.append("")
-    # 市场数值
-    L.append("## 市场数值")
-    L.append("")
-    if manual:
-        L.append(manual)
-    else:
-        n = 0
-        for v in arts:
-            for s in v.get("numbers", []):
-                L.append("- %s —— [%s](%s)" % (s, v["title"][:40], v["url"]))
-                n += 1
-                break
-            if n >= 25: break
-        if n == 0:
-            L.append("（暂无数值类条目）")
-    L.append("")
-    # 各栏目清单
-    L.append("## 各栏目文章清单")
-    for cid in col_order:
-        if cid not in by_col: continue
-        L.append("")
-        L.append("### %s（%d）" % (col_name[cid], len(by_col[cid])))
-        L.append("")
-        for v in by_col[cid]:
-            L.append("- [%s](%s)（%s）" % (v["title"], v["url"], v.get("date", "")[:16]))
-    L.append("")
-    if pending:
-        L.append("## 待人工补抓（详情页WAF）")
-        L.append("")
-        for aid, v in pending.items():
-            L.append("- ID %s ｜ [%s](%s)" % (aid, v.get("title", ""), v.get("url", "")))
-        L.append("")
-    os.makedirs(BRIEF_DIR, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(L))
-    return path
 
 def cmd_run():
     # 幂等保护: 全新沙箱中目录/配置缺失时给出明确提示
@@ -517,14 +470,14 @@ def cmd_run():
         lead = ""
         for para in body_md.split("\n\n"):
             if para and not para.startswith("!["):
-                lead = para[:160]; break
+                lead = para; break
         seen[x["id"]] = {
             "status": "ok", "title": art["title"], "url": x["url"],
             "date": art.get("datetime") or x.get("date", ""),
             "column_id": x["column_id"], "column_name": x["column_name"],
             "channel": art["breadcrumb"][2] if len(art.get("breadcrumb", [])) > 2 else "",
             "file": os.path.relpath(path, BASE), "images": len(imgs),
-            "lead": lead, "numbers": extract_numbers(art["title"], lead),
+            "lead": lead[:160], "numbers": extract_numbers(art["title"], lead),
             "crawled_at": bj_now().isoformat(timespec="seconds")}
         save_json(SEEN_FILE, seen)
         ok_n += 1
@@ -551,10 +504,11 @@ def cmd_mark(ids):
                 v["file"] = os.path.relpath(p, BASE)
                 try:
                     txt = open(p, encoding="utf-8").read()
+                    paras = [x for x in txt.split("---", 2)[-1].split("\n\n") if x.strip() and not x.strip().startswith("![")]
+                    lead_full = paras[0] if paras else ""
                     if "lead" not in v:
-                        paras = [x for x in txt.split("---", 2)[-1].split("\n\n") if x.strip() and not x.strip().startswith("![")]
-                        v["lead"] = paras[0][:160] if paras else ""
-                    v["numbers"] = extract_numbers(v.get("title", ""), v.get("lead", ""))
+                        v["lead"] = lead_full[:160]
+                    v["numbers"] = extract_numbers(v.get("title", ""), lead_full)
                 except Exception:
                     pass
             seen[aid] = v

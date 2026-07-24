@@ -109,7 +109,7 @@
 
 原则：**最小改动**。抓取与解析逻辑一行不动，只把路径假设参数化并默认到用户目录，去除 `/tmp` 暂存，并新增站点生成与调度件。
 
-### 3.1 `crawler.py`（2 处改动）
+### 3.1 `crawler.py`（3 处改动）
 
 1. **BASE 路径环境变量化，默认落在用户目录**（第 16 行）：
 
@@ -121,11 +121,13 @@
 
 2. **配置缺失时的报错文案**（`cmd_run` 开头）：把"请先运行 bootstrap.sh"改为"请确认 columns.json 已部署到 $BJX_BASE/config/"，去掉沙箱指引。
 
+3. **简报构造抽离为 `briefing.py`**：`build_briefing` 移至该模块（库 + CLI 合一），crawler 顶部 `from briefing import build_briefing` 复用，保证"抓取+构造"与"单纯构造"两条路径同一来源，杜绝两侧逻辑漂移；独立运行 `python3 briefing.py [--date YYYY-MM-DD|--all]` 可纯本地重建简报，不触发抓取。
+
 保留不动的关键逻辑：
 
 - `__main__` 中无 DISPLAY 自动 `xvfb-run` 重 exec——服务器上正是无头环境，这段是方案成立的支点（本地 Windows/macOS 调试时设 `BJX_NO_XVFB=1` 跳过）；
 - 有头 Chromium + 每 URL 新 context + `webdriver` 隐藏 + WAF 轮询（`fetch_rendered`）；
-- 简报生成 `build_briefing`：无 `state/briefing_manual.md` 时自动用 `numbers` 抽取兜底，正好匹配无人值守场景。
+- 简报生成 `build_briefing`（现已迁至 briefing.py，见上）：无 `state/briefing_manual.md` 时自动用 `numbers` 抽取兜底，正好匹配无人值守场景。
 
 注意：`crawler.py` 内部 `import requests`、`from playwright.sync_api import ...`，依赖见 3.6。
 
@@ -194,6 +196,8 @@
    注意 crawler.py 失败（非零退出）也要继续跑 site.py 把既有报告发布出去，因此不用 `set -e`，逐命令判状态写日志。
 
 4. **`deploy/bjx.nginx.conf`**（见 4.6）与 **`deploy/bjx-daily.service` / `bjx-daily.timer`**（用户级，见 4.7）。
+
+5. **`briefing.py`**——简报构造模块（库 + CLI 合一）：`build_briefing` 的唯一来源，被 crawler.py import 复用；CLI 用于不触发抓取的简报重建（默认当天，`--date` 指定日，`--all` 覆盖 seen.json 全部日期）。
 
 ## 4. 部署流程说明
 
@@ -327,5 +331,6 @@ tail ~/bjx/data/logs/$(date +%F).log                # 应见 "=== 完成 ==="
 | --- | --- |
 | crawler.py / metrics.py / pack.py / site.py | 默认路径改到用户目录（`~/bjx/*`），pack.py/metrics.py 暂存与输出去除 `/tmp` |
 | site.py | 新增（约 150 行） |
+| briefing.py | 简报构造自 crawler.py 抽离（库 + CLI），crawler 改为 import 复用 |
 | run_daily.sh / requirements.txt / deploy 模板 | 新增小件（deploy 为用户级 systemd + nginx 模板） |
 | 服务器部署与首跑验证 | 约 1–2 小时（含 WAF 验证） |

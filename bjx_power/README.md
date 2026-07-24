@@ -26,7 +26,8 @@
 ```
 bjx_power/
 ├── scripts/
-│   ├── crawler.py      # 抓取 + 简报生成（主程序）
+│   ├── crawler.py      # 抓取主程序（简报构造复用 briefing.py）
+│   ├── briefing.py     # 每日简报构造（库 + CLI，纯本地不联网）
 │   ├── site.py         # 静态站点生成（简报 → HTML）
 │   ├── run_daily.sh    # 每日流程编排（由 systemd 用户级 timer 调用，可手动执行）
 │   ├── metrics.py      # 正文图片 OCR 预筛（可选工具）
@@ -218,6 +219,15 @@ tail ~/bjx/data/logs/$(date +%F).log           # 应见 "=== 完成 ==="
 ```
 
 浏览器访问 <https://bjx.geekbit.org>，首页出现当日报告即验收通过。日常巡检看首页顶部"最近抓取"状态横幅即可。
+
+不触发抓取、仅由已有爬取结果重建简报与网站（纯本地操作）：
+
+```bash
+# 重建全部日期简报; 单日用 --date YYYY-MM-DD, 默认今天
+~/bjx/repo/bjx_power/.venv/bin/python ~/bjx/repo/bjx_power/scripts/briefing.py --all
+# 重渲染网站
+~/bjx/repo/bjx_power/.venv/bin/python ~/bjx/repo/bjx_power/scripts/site.py
+```
 
 ## 文档索引
 
